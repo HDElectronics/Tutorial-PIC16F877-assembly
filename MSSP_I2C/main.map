@@ -1,0 +1,66 @@
+MPLINK 4.48, Linker
+Linker Map File - Created Sat May 02 00:57:41 2020
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000002
+                   .org_2       code   0x000004    program   0x000110
+      .config_2007_MAIN.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000000      
+                            0x000004    0x00008b      
+                            0x002007    0x002007      
+            138 out of 8454 program addresses used, program memory utilization is 1%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+  I2C_ACK_master_to_slave   0x000069    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+  I2C_ACK_slave_to_master   0x000054    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+I2C_ACK_slave_to_master_label   0x000057    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_NOACK   0x00006f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+       I2C_Repeated_Start   0x00005a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_idle   0x00003b    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+           I2C_idle_label   0x00003d    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_read   0x00005f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+           I2C_read_label   0x000063    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_start   0x00004a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_stop   0x000075    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_write   0x00004f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                       b1   0x00007f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                    delay   0x00007a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                  infloop   0x000027    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                     main   0x00000d    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x00000d    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                  infloop   0x000027    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_idle   0x00003b    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+           I2C_idle_label   0x00003d    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_start   0x00004a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_write   0x00004f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+  I2C_ACK_slave_to_master   0x000054    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+I2C_ACK_slave_to_master_label   0x000057    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+       I2C_Repeated_Start   0x00005a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_read   0x00005f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+           I2C_read_label   0x000063    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+  I2C_ACK_master_to_slave   0x000069    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                I2C_NOACK   0x00006f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                 I2C_stop   0x000075    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                    delay   0x00007a    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+                       b1   0x00007f    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\MSSP_I2C\main.asm
+
+

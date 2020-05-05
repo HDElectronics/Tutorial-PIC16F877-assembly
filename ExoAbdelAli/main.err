@@ -1,10 +1,10 @@
-Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 92 : Found call to macro in column 1. (bank1)
-Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 93 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 95 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 96 : Found call to macro in column 1. (bank0)
-Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 98 : Found call to macro in column 1. (bank1)
-Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 117 : Found call to macro in column 1. (bank0)
-Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 127 : Found call to macro in column 1. (bank0)
-Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 141 : Using default destination of 1 (file).
-Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 145 : Using default destination of 1 (file).
-Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\EXOABDELALI\MAIN.ASM 149 : Using default destination of 1 (file).
+Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 104 : Found call to macro in column 1. (bank1)
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 105 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 107 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 108 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 109 : Found call to macro in column 1. (bank0)
+Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 130 : Found call to macro in column 1. (bank0)
+Warning[206] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 139 : Found call to macro in column 1. (bank0)
+Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 153 : Using default destination of 1 (file).
+Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 157 : Using default destination of 1 (file).
+Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\EXOABDELALI\MAIN.ASM 161 : Using default destination of 1 (file).

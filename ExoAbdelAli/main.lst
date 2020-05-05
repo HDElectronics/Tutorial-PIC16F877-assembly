@@ -1,27 +1,37 @@
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  1
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00001 ;****************************************************************
-                      00002 ;Exo proposé par Abdelali:                                                                              
-                            *
-                      00003 ;       Deux LEDs une sur RC0 et l'autre sur RC1                                        *
-                      00004 ;       Deux Bouttons un sur RB0 et l'autre sur RB4                                     *
-                      00005 ;       Ecrire un programme en utilisant les interruptions sur          *
-                      00006 ;       RB0 et RB4.                                                                                     
-                                            *
-                      00007 ;               RB0 : clignote une fois la LED branchée sur RC0                 *
-                      00008 ;               RB1 : clignote une fois la LED branchée sur RC1                 *
-                      00009 ;       Conseills : Utilisez l'interruption RB0/INT et RB Change        *
-                      00010 ;                               INTCON = 0b10011000                                                     
-                                    *
+                      00001 ;**********************************************************************
+                      00002 ;                                                                     *
+                      00003 ;    Filename:      ExoIsli.asm                                               *
+                      00004 ;    Date:          17/04/2020                                        *
+                      00005 ;                                                                     *
+                      00006 ;    Author:            KHADRAOUI Ibrahim                                 *
+                      00007 ;    Company:           USTHB FEI                                         *
+                      00008 ;                                                                     * 
+                      00009 ;                                                                     *
+                      00010 ;**********************************************************************
                       00011 ;****************************************************************
-                      00012         
-                      00013 ;*********************************      
-                      00014         list p=16f877                           ;*
-                      00015         #include <p16f877.inc>          ;*
+                      00012 ;Exo proposé par Abdelali:                                                                              
+                            *
+                      00013 ;       Deux LEDs une sur RC0 et l'autre sur RC1                                        *
+                      00014 ;       Deux Bouttons un sur RB0 et l'autre sur RB4                                     *
+                      00015 ;       Ecrire un programme en utilisant les interruptions sur          *
+                      00016 ;       RB0 et RB4.                                                                                     
+                                            *
+                      00017 ;               RB0 : clignote une fois la LED branchée sur RC0                 *
+                      00018 ;               RB1 : clignote une fois la LED branchée sur RC1                 *
+                      00019 ;       Conseills : Utilisez l'interruption RB0/INT et RB Change        *
+                      00020 ;                               INTCON = 0b10011000                                                     
+                                    *
+                      00021 ;****************************************************************
+                      00022         
+                      00023 ;*********************************      
+                      00024         list p=16f877                           ;*
+                      00025         #include <p16f877.inc>          ;*
                       00001         LIST
                       00002 
                       00003 ;==========================================================================
@@ -31,259 +41,266 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00007 ;==========================================================================
                       00008 
                       00540         LIST
-2007   3F3A           00016         __config 0x3F3A                         ;*
-                      00017 ;*********************************
-                      00018 
-                      00019 ;*************************************
-                      00020 ;       MACRO POUR CHANGER LES BANKS     *
-                      00021 ;*************************************
-                      00022 bank0   macro                                           ;*                      
-                      00023                 bcf STATUS,RP0                          ;*
-                      00024                 bcf     STATUS,RP1                              ;*
-                      00025                 endm                                            ;*
-                      00026 bank1   macro                                           ;*
-                      00027                 bsf STATUS,RP0                          ;*
-                      00028                 bcf     STATUS,RP1                              ;*
-                      00029                 endm                                            ;*
-                      00030 bank2   macro                                           ;*
-                      00031                 bcf STATUS,RP0                          ;*
-                      00032                 bsf     STATUS,RP1                              ;*
-                      00033                 endm                                            ;*
-                      00034 bank3   macro                                           ;*
-                      00035                 bsf STATUS,RP0                          ;*
-                      00036                 bsf     STATUS,RP1                              ;*
-                      00037                 endm                                            ;*
-                      00038 ;*************************************
-                      00039                 
-                      00040 ;************************************
-                      00041 ;       DECLARATION DES VARIABLES               *
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  2
+2007   3F3A           00026         __config 0x3F3A                         ;*
+                      00027 ;*********************************
+                      00028 
+                      00029 ;*************************************
+                      00030 ;       MACRO POUR CHANGER LES BANKS     *
+                      00031 ;*************************************
+                      00032 bank0   macro                                           ;*                      
+                      00033                 bcf STATUS,RP0                          ;*
+                      00034                 bcf     STATUS,RP1                              ;*
+                      00035                 endm                                            ;*
+                      00036 bank1   macro                                           ;*
+                      00037                 bsf STATUS,RP0                          ;*
+                      00038                 bcf     STATUS,RP1                              ;*
+                      00039                 endm                                            ;*
+                      00040 bank2   macro                                           ;*
+                      00041                 bcf STATUS,RP0                          ;*
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00042 ;************************************************************************************************
-  00000020            00043 w_temp                  equ     20h     ;variable pour enregistrer accumulateur W lors des interruptions
+                      00042                 bsf     STATUS,RP1                              ;*
+                      00043                 endm                                            ;*
+                      00044 bank3   macro                                           ;*
+                      00045                 bsf STATUS,RP0                          ;*
+                      00046                 bsf     STATUS,RP1                              ;*
+                      00047                 endm                                            ;*
+                      00048 ;*************************************
+                      00049                 
+                      00050 ;************************************
+                      00051 ;       DECLARATION DES VARIABLES               *
+                      00052 ;************************************************************************************************
+  00000020            00053 w_temp                  equ     20h     ;variable pour enregistrer accumulateur W lors des interruptions
                                             *
-  00000021            00044 status_temp             equ 21h ;variable pour enregistrer le registre STATUS lors des interruptions    
+  00000021            00054 status_temp             equ 21h ;variable pour enregistrer le registre STATUS lors des interruptions    
                             *
-  00000022            00045 variable1               equ 22h ;variable utiliser dans la fonction de temporisation                    
+  00000022            00055 variable1               equ 22h ;variable utiliser dans la fonction de temporisation                    
                                             *
-  00000023            00046 variable2               equ 23h ;variable utiliser dans la fonction de temporisation                    
+  00000023            00056 variable2               equ 23h ;variable utiliser dans la fonction de temporisation                    
                                             *
-  00000024            00047 variable3               equ 24h ;variable utiliser dans la fonction de temporisation                    
+  00000024            00057 variable3               equ 24h ;variable utiliser dans la fonction de temporisation                    
                                             *
-                      00048 ;************************************************************************************************
-                      00049 
-0000                  00050         org     0x00
-0000   2812           00051         goto    main
-                      00052 
-                      00053         
-                      00054 ;****************************************
-                      00055 ;       L'adresse 0x04 de l'interruption        *
-                      00056 ;************************************************       
-                      00057 ;       si une interruption surviens le programme       *
-                      00058 ;       sautera à la ligne "org 0x04" juste                     *
-                      00059 ;       en dessous                                                                      *
-                      00060 ;*******************************************************************************************************
+                      00058 ;************************************************************************************************
+                      00059 
+0000                  00060         org     0x00
+0000   2813           00061         goto    main
+                      00062 
+                      00063         
+                      00064 ;****************************************
+                      00065 ;       L'adresse 0x04 de l'interruption        *
+                      00066 ;************************************************       
+                      00067 ;       si une interruption surviens le programme       *
+                      00068 ;       sautera à la ligne "org 0x04" juste                     *
+                      00069 ;       en dessous                                                                      *
+                      00070 ;*******************************************************************************************************
                             *****
-0004                  00061         org     0x04            ;                                                                       
+0004                  00071         org     0x04            ;                                                                       
                                                                                                                             
-                      00062 ;                                                                                                       
+                      00072 ;                                                                                                       
                                                                                                                             
-                      00063         ;Sauvegard de W et STATUS                                                                       
+                      00073         ;Sauvegard de W et STATUS                                                                       
                                                                                                                     *
-0004   00A0           00064         movwf   w_temp          ;mettre W dans la variable w_temp                                       
+0004   00A0           00074         movwf   w_temp          ;mettre W dans la variable w_temp                                       
                                                                                             *
-0005   0803           00065         movf    STATUS,W        ;mettre STATUS dans W                                                   
+0005   0803           00075         movf    STATUS,W        ;mettre STATUS dans W                                                   
                                                                                                     *
-0006   00A1           00066         movwf   status_temp     ;mettre W(STATUS) dans la variable status_temp                          
+0006   00A1           00076         movwf   status_temp     ;mettre W(STATUS) dans la variable status_temp                          
                                                                             *
-                      00067 ;                                                                                                       
-                                                                                                                            
-                      00068         ;Test des flags pour savoir quelle interruptions s'est déclanchée                               
-                                                                            *
-0007   188B           00069         btfsc   INTCON,INTF             ;Test du flag de RB0/INT                                        
-                                                                                                    *
-0008   2028           00070         call    fonction_INTF   ;Si le flag est à 1 executer la sous fonction de cette interruption     
-                                                    *
-0009   180B           00071         btfsc   INTCON,RBIF             ;Test du flag de RB Change                                      
-                                                                                                    *
-000A   2020           00072         call    fonction_RBIF   ;Si le flag est à 1 executer la sous fonction de cette interruption     
-                                                    *
-                      00073 ;                                                                                                       
-                                                                                                                            
-                      00074         ;Remise à zéro des flags                                                                        
-                                                                                                                    *
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  3
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000B   108B           00075         bcf             INTCON,INTF ;                                                                   
-                                                                                                                            
-000C   100B           00076         bcf     INTCON,RBIF     ;                                                                       
-                                                                                                                            
                       00077 ;                                                                                                       
                                                                                                                             
-                      00078         ;Récupération de W et du Registre STATUS                                                        
-                                                                                                    *
-000D   0821           00079         movf    status_temp,W   ;mettre status_temp dans W                                              
-                                                                                            *
-000E   0083           00080         movwf   STATUS                  ;puis le mettre dans STATUS                                     
-                                                                                                    *
-000F   0EA0           00081         swapf   w_temp,F                ;inverser les quartets de w_temp                                
-                                                                                            *
-0010   0E20           00082         swapf   w_temp,W                ;ré-inverser les quartets de w_temp et mettre le résultat dans W
-                                                            *
-                      00083         ;Remarque : on a utilisé le swapf parce qu'il n'affecte aucun bit du registre STATUS            
-                                                    *
-                      00084 ;                                                                                                       
-                                                                                                                            
-0011   0009           00085         retfie  ;Retoure au programme principal et remise à 1 de INTCON,GIE                             
+                      00078         ;Test des flags pour savoir quelle interruptions s'est déclanchée                               
                                                                             *
-                      00086 ;*******************************************************************************************************
-                            *****
-                      00087 
-                      00088 ;****************************************
-                      00089 ;               Programme Principal                             *
-                      00090 ;********************************************************
-0012                  00091 main    ;                                                                                               
-                            *
-Warning[206]: Found call to macro in column 1. (bank1)
-                      00092 bank1                           ;aller à la bank1                                       *
-0012   1683               M                 bsf STATUS,RP0                          ;*
-0013   1303               M                 bcf     STATUS,RP1                              ;*
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0014   0187           00093         clrf    TRISC   ;mettre le PORTC en sortie                      *
-0015   30FF           00094         movlw   0xff    ;                                                                       *
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0016   0086           00095         movwf   TRISB   ;mettre le PORTB en entrée                      *
-Warning[206]: Found call to macro in column 1. (bank0)
-                      00096 bank0                           ;aller à la bank0                                       *
-0017   1283               M                 bcf STATUS,RP0                          ;*
-0018   1303               M                 bcf     STATUS,RP1                              ;*
-0019   0187           00097         clrf    PORTC   ;mise à zéro du PORTC                           *
-Warning[206]: Found call to macro in column 1. (bank1)
-                      00098 bank1                           ;aller à la bank1                                       *
-001A   1683               M                 bsf STATUS,RP0                          ;*
-001B   1303               M                 bcf     STATUS,RP1                              ;*
-001C   3098           00099         movlw   98h             ; W = 0b10011000                                        *
-001D   008B           00100         movwf   INTCON  ; mise à 1 de GIE et INTE et RBIE       *
-                      00101         ;Remarque GIE permet d'utiliser les interruptions       *
-                      00102         ;INTE active l'interruption de RB0/INT                          *
-                      00103         ;RBIE active l'interruption de RB Change                        *
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  4
+0007   188B           00079         btfsc   INTCON,INTF             ;Test du flag de RB0/INT                                        
+                                                                                                    *
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00104 ;                                                                                                       
-                                    *
-                      00105         ;Boucle infinie                                                                         *
-001E                  00106 while1                  ;                                                                               
+0008   2027           00080         call    fonction_INTF   ;Si le flag est à 1 executer la sous fonction de cette interruption     
+                                                    *
+0009   180B           00081         btfsc   INTCON,RBIF             ;Test du flag de RB Change                                      
+                                                                                                    *
+000A   2020           00082         call    fonction_RBIF   ;Si le flag est à 1 executer la sous fonction de cette interruption     
+                                                    *
+                      00083 ;                                                                                                       
+                                                                                                                            
+                      00084         ;Remise à zéro des flags                                                                        
+                                                                                                                    *
+000B   108B           00085         bcf             INTCON,INTF ;                                                                   
+                                                                                                                            
+000C   0806           00086         movf    PORTB,W ;lire le PORTB pour raz le flag                                                 
+                                                                                            *
+                      00087                                         ;voir datasheet page 31 (PORTB)                                 
+                                                                                                            *
+000D   100B           00088         bcf     INTCON,RBIF     ;                                                                       
+                                                                                                                            
+                      00089 ;                                                                                                       
+                                                                                                                            
+                      00090         ;Récupération de W et du Registre STATUS                                                        
+                                                                                                    *
+000E   0821           00091         movf    status_temp,W   ;mettre status_temp dans W                                              
+                                                                                            *
+000F   0083           00092         movwf   STATUS                  ;puis le mettre dans STATUS                                     
+                                                                                                    *
+0010   0EA0           00093         swapf   w_temp,F                ;inverser les quartets de w_temp                                
+                                                                                            *
+0011   0E20           00094         swapf   w_temp,W                ;ré-inverser les quartets de w_temp et mettre le résultat dans W
+                                                            *
+                      00095         ;Remarque : on a utilisé le swapf parce qu'il n'affecte aucun bit du registre STATUS            
+                                                    *
+                      00096 ;                                                                                                       
+                                                                                                                            
+0012   0009           00097         retfie  ;Retoure au programme principal et remise à 1 de INTCON,GIE                             
+                                                                            *
+                      00098 ;*******************************************************************************************************
+                            *****
+                      00099 
+                      00100 ;****************************************
+                      00101 ;               Programme Principal                             *
+                      00102 ;********************************************************
+0013                  00103 main    ;                                                                                               
                             *
-001E   0063           00107         sleep
-                      00108                                 ;                                                                       
-                                    *
-001F   281E           00109         goto while1 ;                                                                           *
-                      00110 ;********************************************************       
-                      00111 
-                      00112 ;****************************************
-                      00113 ;               Les sous-programmes                             *
-                      00114 ;************************************************************
-0020                  00115 fonction_RBIF   ;sous-programme de l'interruption RB Change     *
-                      00116                                 ;Il fait clignoter la LED branchée sur RC1      *
+Warning[206]: Found call to macro in column 1. (bank1)
+                      00104 bank1                           ;aller à la bank1                                       *
+0013   1683               M                 bsf STATUS,RP0                          ;*
+0014   1303               M                 bcf     STATUS,RP1                              ;*
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0015   0187           00105         clrf    TRISC   ;mettre le PORTC en sortie                      *
+0016   30FF           00106         movlw   0xff    ;                                                                       *
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0017   0086           00107         movwf   TRISB   ;mettre le PORTB en entrée                      *
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0018   1381           00108         bcf             OPTION_REG,NOT_RBPU     ;activer résistances PU *
 Warning[206]: Found call to macro in column 1. (bank0)
-                      00117 bank0                           ;                                                                       
+                      00109 bank0                           ;aller à la bank0                                       *
+0019   1283               M                 bcf STATUS,RP0                          ;*
+001A   1303               M                 bcf     STATUS,RP1                              ;*
+001B   0187           00110         clrf    PORTC   ;mise à zéro du PORTC                           *
+001C   0806           00111         movf    PORTB,W ;lire le PORTB pour raz le flag         *
+                      00112                                         ;voir datasheet page 31 (PORTB)         *
+001D   3098           00113         movlw   98h             ; W = 0b10011000                                        *
+001E   008B           00114         movwf   INTCON  ; mise à 1 de GIE et INTE et RBIE       *
+                      00115         ;Remarque GIE permet d'utiliser les interruptions       *
+                      00116         ;INTE active l'interruption de RB0/INT                          *
+                      00117         ;RBIE active l'interruption de RB Change                        *
+                      00118 ;                                                                                                       
+                                    *
+                      00119         ;Boucle infinie                                                                         *
+001F                  00120 while1                  ;                                                                               
+                            *
+                      00121                                 ;                                                                       
+                                    *
+001F   281F           00122         goto while1 ;                                                                           *
+                      00123 ;********************************************************       
+                      00124 
+                      00125 ;****************************************
+                      00126 ;               Les sous-programmes                             *
+                      00127 ;************************************************************
+0020                  00128 fonction_RBIF   ;sous-programme de l'interruption RB Change     *
+                      00129                                 ;Il fait clignoter la LED branchée sur RC1      *
+Warning[206]: Found call to macro in column 1. (bank0)
+                      00130 bank0                           ;                                                                       
                                     *
 0020   1283               M                 bcf STATUS,RP0                          ;*
 0021   1303               M                 bcf     STATUS,RP1                              ;*
-0022   1487           00118         bsf     PORTC,1 ;                                                                               
+0022   1487           00131         bsf     PORTC,1 ;                                                                               
                             *
-0023   202E           00119         call    delay   ;                                                                               
+0023   202D           00132         call    delay   ;                                                                               
                             *
-0024   1087           00120         bcf             PORTC,1 ;                                                                       
+0024   1087           00133         bcf             PORTC,1 ;                                                                       
                                     *
-0025   202E           00121         call    delay   ;                                                                               
+0025   202D           00134         call    delay   ;                                                                               
                             *
-0026   0806           00122         movf    PORTB,W ;                                                                               
-                            *
-0027   0008           00123         return                  ;                                                                       
+0026   0008           00135         return                  ;                                                                       
                                     *
-                      00124 ;************************************************************
-0028                  00125 fonction_INTF   ;sous-programme de l'interruption RB0/INT       *
-                      00126                                 ;Il fait clignoter la LED branchée sur RC0      *       
+                      00136 ;************************************************************
+0027                  00137 fonction_INTF   ;sous-programme de l'interruption RB0/INT       *
+                      00138                                 ;Il fait clignoter la LED branchée sur RC0      *       
 Warning[206]: Found call to macro in column 1. (bank0)
-                      00127 bank0                           ;                                                                       
+                      00139 bank0                           ;                                                                       
                                     *
-0028   1283               M                 bcf STATUS,RP0                          ;*
-0029   1303               M                 bcf     STATUS,RP1                              ;*
-002A   1407           00128         bsf     PORTC,0 ;                                                                               
-                            *
-002B   202E           00129         call    delay   ;                                                                               
-                            *
-002C   1007           00130         bcf             PORTC,0 ;                                                                       
-                                    *
-002D   0008           00131         return                  ;                                                                       
-                                    *
-                      00132 ;************************************************************   
-002E                  00133 delay                   ;sous-programme de temporisation                        *
-                      00134 ;                                                                                                       
-                                            *
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  5
+0027   1283               M                 bcf STATUS,RP0                          ;*
+0028   1303               M                 bcf     STATUS,RP1                              ;*
+0029   1407           00140         bsf     PORTC,0 ;                                                                               
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-002E   30FF           00135         MOVLW 0xFF              ;                                                                       
+                            *
+002A   202D           00141         call    delay   ;                                                                               
+                            *
+002B   1007           00142         bcf             PORTC,0 ;                                                                       
                                     *
-002F   00A2           00136         MOVWF variable1 ;                                                                               
-                            *
-0030   00A3           00137         MOVWF variable2 ;                                                                               
-                            *
-0031   300B           00138         MOVLW 0x0B              ;                                                                       
+002C   0008           00143         return                  ;                                                                       
                                     *
-0032   00A4           00139         MOVWF variable3 ;                                                                               
+                      00144 ;************************************************************   
+002D                  00145 delay                   ;sous-programme de temporisation                        *
+                      00146 ;                                                                                                       
+                                            *
+002D   30FF           00147         movlw           0xff            ;                                                               
                             *
-0033                  00140 B1                                      ;                                                               
+002E   00A2           00148         movwf           variable1       ;                                                               
+                            *
+002F   00A3           00149         movwf           variable2       ;                                                               
+                            *
+0030   300B           00150         movlw           0x0b            ;                                                               
+                            *
+0031   00A4           00151         movwf           variable3       ;                                                               
+                            *
+0032                  00152 b1                                                      ;                                               
                                             *
 Message[305]: Using default destination of 1 (file).
-0033   0BA2           00141         DECFSZ variable1;                                                                               
+0032   0BA2           00153         decfsz          variable1       ;                                                               
                             *
-0034   2833           00142         GOTO B1                 ;                                                                       
+0033   2832           00154         goto            b1                      ;                                                       
                                     *
-0035   30FF           00143         MOVLW 0xFF              ;                                                                       
-                                    *
-0036   00A2           00144         MOVWF variable1 ;                                                                               
+0034   30FF           00155         movlw           0xff            ;                                                               
                             *
-Message[305]: Using default destination of 1 (file).
-0037   0BA3           00145         DECFSZ variable2;                                                                               
-                            *
-0038   2833           00146         GOTO B1                 ;                                                                       
-                                    *
-0039   30FF           00147         MOVLW 0xFF              ;                                                                       
-                                    *
-003A   00A3           00148         MOVWF variable2 ;                                                                               
+0035   00A2           00156         movwf           variable1       ;                                                               
                             *
 Message[305]: Using default destination of 1 (file).
-003B   0BA4           00149         DECFSZ variable3;                                                                               
+0036   0BA3           00157         decfsz          variable2       ;                                                               
                             *
-003C   2833           00150         GOTO B1                 ;                                                                       
+0037   2832           00158         goto            b1                      ;                                                       
                                     *
-003D   300B           00151         MOVLW 0x0B              ;                                                                       
-                                    *
-003E   00A4           00152         MOVWF variable3 ;                                                                               
+0038   30FF           00159         movlw           0xff            ;                                                               
                             *
-003F   0008           00153         RETURN                  ;                                                                       
+0039   00A3           00160         movwf           variable2       ;                                                               
+                            *
+Message[305]: Using default destination of 1 (file).
+003A   0BA4           00161         decfsz          variable3       ;                                                               
+                            *
+003B   2832           00162         goto            b1                      ;                                                       
                                     *
-                      00154 ;************************************************************
-                      00155         end             
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  6
+003C   300B           00163         movlw           0x0b            ;                                                               
+                            *
+003D   00A4           00164         movwf           variable3       ;                                                               
+                            *
+003E   0008           00165         return                                  ;                                                       
+                                    *
+                      00166 ;************************************************************
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00167         end             
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  7
 
 
 SYMBOL TABLE
@@ -303,7 +320,6 @@ ADIF                              00000006
 ADON                              00000000
 ADRESH                            0000001E
 ADRESL                            0000009E
-B1                                00000033
 BCLIE                             00000003
 BCLIF                             00000003
 BF                                00000000
@@ -342,13 +358,13 @@ CREN                              00000004
 CSRC                              00000007
 D                                 00000005
 DATA_ADDRESS                      00000005
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  7
+DC                                00000001
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  8
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-DC                                00000001
 D_A                               00000005
 D_NOT_A                           00000005
 EEADR                             0000010D
@@ -401,13 +417,13 @@ P                                 00000004
 PCFG0                             00000000
 PCFG1                             00000001
 PCFG2                             00000002
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  8
+PCFG3                             00000003
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE  9
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-PCFG3                             00000003
 PCL                               00000002
 PCLATH                            0000000A
 PCON                              0000008E
@@ -460,13 +476,13 @@ RC9                               00000006
 RCD8                              00000000
 RCEN                              00000003
 RCIE                              00000005
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE  9
+RCIF                              00000005
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE 10
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-RCIF                              00000005
 RCREG                             0000001A
 RCSTA                             00000018
 RD                                00000000
@@ -519,13 +535,13 @@ T1CKPS1                           00000005
 T1CON                             00000010
 T1INSYNC                          00000002
 T1OSCEN                           00000003
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE 10
+T1SYNC                            00000002
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-T1SYNC                            00000002
 T2CKPS0                           00000000
 T2CKPS1                           00000001
 T2CON                             00000012
@@ -578,13 +594,13 @@ TRISD1                            00000001
 TRISD2                            00000002
 TRISD3                            00000003
 TRISD4                            00000004
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE 11
+TRISD5                            00000005
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE 12
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TRISD5                            00000005
 TRISD6                            00000006
 TRISD7                            00000007
 TRISE                             00000089
@@ -637,13 +653,13 @@ _LVP_ON                           00003FFF
 _PWRTE_OFF                        00003FFF
 _PWRTE_ON                         00003FF7
 _RC_OSC                           00003FFF
-MPASM  5.50                          MAIN.ASM   4-17-2020  7:11:33         PAGE 12
+_WDTE_OFF                         00003FFB
+MPASM  5.50                          MAIN.ASM   5-3-2020  1:32:42         PAGE 13
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-_WDTE_OFF                         00003FFB
 _WDTE_ON                          00003FFF
 _WDT_OFF                          00003FFB
 _WDT_ON                           00003FFF
@@ -654,35 +670,36 @@ _WRT_ON                           00003FFF
 _XT_OSC                           00003FFD
 __16F877                          00000001
 __DEBUG                           1
+b1                                00000032
 bank0                             
 bank1                             
 bank2                             
 bank3                             
-delay                             0000002E
-fonction_INTF                     00000028
+delay                             0000002D
+fonction_INTF                     00000027
 fonction_RBIF                     00000020
-main                              00000012
+main                              00000013
 status_temp                       00000021
 variable1                         00000022
 variable2                         00000023
 variable3                         00000024
 w_temp                            00000020
-while1                            0000001E
+while1                            0000001F
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
-0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXX-
 2000 : -------X-------- ---------------- ---------------- ----------------
 
 All other memory blocks unused.
 
-Program Memory Words Used:    61
-Program Memory Words Free:  8131
+Program Memory Words Used:    60
+Program Memory Words Free:  8132
 
 
 Errors   :     0
-Warnings :     5 reported,     0 suppressed
-Messages :     5 reported,     0 suppressed
+Warnings :     4 reported,     0 suppressed
+Messages :     6 reported,     0 suppressed
 
 

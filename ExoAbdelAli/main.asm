@@ -25,27 +25,6 @@
 	#include <p16f877.inc>		;*
 	__config 0x3F3A				;*
 ;*********************************
-
-;*************************************
-;	MACRO POUR CHANGER LES BANKS	 *
-;*************************************
-bank0	macro						;*			
-		bcf STATUS,RP0				;*
-		bcf	STATUS,RP1				;*
-		endm						;*
-bank1	macro						;*
-		bsf STATUS,RP0				;*
-		bcf	STATUS,RP1				;*
-		endm						;*
-bank2	macro						;*
-		bcf STATUS,RP0				;*
-		bsf	STATUS,RP1				;*
-		endm						;*
-bank3	macro						;*
-		bsf STATUS,RP0				;*
-		bsf	STATUS,RP1				;*
-		endm						;*
-;*************************************
 		
 ;************************************
 ;	DECLARATION DES VARIABLES		*
@@ -83,6 +62,8 @@ variable3 		equ 24h ;variable utiliser dans la fonction de temporisation					*
 ;																											*
 	;Remise à zéro des flags																				*
 	bcf		INTCON,INTF ;																					*
+	movf	PORTB,W ;lire le PORTB pour raz le flag															*
+					;voir datasheet page 31 (PORTB)															*
 	bcf 	INTCON,RBIF	;																					*
 ;																											*
 	;Récupération de W et du Registre STATUS																*
@@ -99,13 +80,15 @@ variable3 		equ 24h ;variable utiliser dans la fonction de temporisation					*
 ;		Programme Principal				*
 ;********************************************************
 main	;												*
-bank1				;aller à la bank1					*
+	banksel	TRISC	;									*
 	clrf	TRISC	;mettre le PORTC en sortie			*
 	movlw	0xff	;									*
 	movwf	TRISB	;mettre	le PORTB en entrée 			*
-bank0				;aller à la bank0					*
+	bcf		OPTION_REG,NOT_RBPU	;activer résistances PU *
+	banksel	PORTC	;									*
 	clrf 	PORTC	;mise à zéro du PORTC				*
-bank1				;aller à la bank1					*
+	movf	PORTB,W ;lire le PORTB pour raz le flag		*
+					;voir datasheet page 31 (PORTB)		*
 	movlw	98h		; W = 0b10011000					*
 	movwf 	INTCON	; mise à 1 de GIE et INTE et RBIE	*
 	;Remarque GIE permet d'utiliser les interruptions	*
@@ -114,7 +97,6 @@ bank1				;aller à la bank1					*
 ;														*
 	;Boucle infinie										*
 while1			;										*
-	sleep
 				;										*
 	goto while1 ;										*
 ;********************************************************	
@@ -124,17 +106,16 @@ while1			;										*
 ;************************************************************
 fonction_RBIF	;sous-programme de l'interruption RB Change	*
 				;Il fait clignoter la LED branchée sur RC1	*
-bank0				;										*
+	banksel	PORTC	;										*
 	bsf 	PORTC,1 ;										*
 	call 	delay	;										*
 	bcf		PORTC,1 ;										*
 	call	delay	;										*
-	movf	PORTB,W ;										*
 	return			;										*
 ;************************************************************
 fonction_INTF	;sous-programme de l'interruption RB0/INT	*
 				;Il fait clignoter la LED branchée sur RC0	*	
-bank0				;										*
+	banksel	PORTC	;										*
 	bsf 	PORTC,0 ;										*
 	call 	delay	;										*
 	bcf		PORTC,0 ;										*
@@ -142,24 +123,24 @@ bank0				;										*
 ;************************************************************	
 delay			;sous-programme de temporisation			*
 ;															*
-	MOVLW 0xFF		;										*
-	MOVWF variable1 ;										*
-	MOVWF variable2 ;										*
-	MOVLW 0x0B		;										*
-	MOVWF variable3	;										*
-B1					;										*
-	DECFSZ variable1;										*
-	GOTO B1			;										*
-	MOVLW 0xFF		;										*
-	MOVWF variable1	;										*
-	DECFSZ variable2;										*
-	GOTO B1			;										*
-	MOVLW 0xFF		;										*
-	MOVWF variable2	;										*
-	DECFSZ variable3;										*
-	GOTO B1			;										*
-	MOVLW 0x0B		;										*
-	MOVWF variable3	;										*
-	RETURN			;										*
+	movlw 		0xff		;								*
+	movwf 		variable1 	;								*
+	movwf 		variable2 	;								*
+	movlw 		0x0b		;								*
+	movwf 		variable3	;								*
+b1							;								*
+	decfsz 		variable1	;								*
+	goto 		b1			;								*
+	movlw 		0xff		;								*
+	movwf 		variable1	;								*
+	decfsz 		variable2	;								*
+	goto 		b1			;								*
+	movlw 		0xff		;								*
+	movwf 		variable2	;								*
+	decfsz 		variable3	;								*
+	goto 		b1			;								*
+	movlw 		0x0b		;								*
+	movwf 		variable3	;								*
+	return					;								*
 ;************************************************************
 	end		

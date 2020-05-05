@@ -1,0 +1,42 @@
+MPLINK 4.48, Linker
+Linker Map File - Created Tue May 05 18:57:16 2020
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000002
+                   .org_2       code   0x000004    program   0x00005e
+      .config_2007_MAIN.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000000      
+                            0x000004    0x000032      
+                            0x002007    0x002007      
+            49 out of 8454 program addresses used, program memory utilization is 0%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x000012    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                 tmr0_isr   0x000026    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+               toggle_led   0x00002e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                   while1   0x000025    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     main   0x000012    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                   while1   0x000025    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                 tmr0_isr   0x000026    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+               toggle_led   0x00002e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+
+
