@@ -10,7 +10,7 @@
 ;**********************************************************************
 ;**********************************************************************
 ;                                                                     *
-;    Notes: On utilise une diviseur de fre©quence de 1/256 et notre	  *
+;    Notes: On utilise une diviseur de frequence de 1/256 et notre	  *
 ;			quartz est de 4Mhz alors notre cycle d'instruction est    *
 ;			de 1µs on en deduit que le timer0 s'incremente chaque  	  *
 ;			256µs(a cause du diviseur de frequence) pour obtenir un   *
@@ -28,7 +28,8 @@
 	__config 0x3f3a 
 ;************************************************************************************************************************		
 ;
-;***** variable definitions
+;***** variable&constants definitions
+valeur	set		20
 	cblock 	20h
 		w_temp        :1
 		status_temp   :1
@@ -39,7 +40,9 @@ mask_option 	  	equ 	b'10000111'
 mask_interruption 	equ 	b'10100000'
 ;-----------------------------------
 	#define led PORTB,RB0
+
 ;-----------------------------------
+;***** macros definitions
 write_reg macro register,value 
 		banksel register
 		movlw value
@@ -77,7 +80,7 @@ main
 			banksel 	TRISB
 			bcf 		TRISB,.0
 			banksel 	compteur
-			movlw		.10
+			movlw		valeur
 			movwf		compteur
 			write_reg 	TMR0,0x3d
 			banksel 	INTCON
@@ -91,7 +94,7 @@ tmr0_isr
 			banksel 	PORTB		
 			decfsz		compteur
 			return
-			movlw		.10
+			movlw		valeur
 			movwf		compteur	
 			call 		toggle_led	
 			return
