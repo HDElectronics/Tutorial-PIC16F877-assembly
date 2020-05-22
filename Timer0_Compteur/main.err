@@ -1,0 +1,4 @@
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\TIMER0_COMPTEUR\MAIN.ASM 66 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\TIMER0_COMPTEUR\MAIN.ASM 68 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\TIMER0_COMPTEUR\MAIN.ASM 69 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[305] C:\USERS\MY PC\DOCUMENTS\TP MICRO\TUTORIAL-PIC16F877-ASSEMBLY\TIMER0_COMPTEUR\MAIN.ASM 86 : Using default destination of 1 (file).

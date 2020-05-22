@@ -1,5 +1,5 @@
 MPLINK 4.48, Linker
-Linker Map File - Created Wed May 06 04:41:53 2020
+Linker Map File - Created Thu May 21 04:25:23 2020
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -24,19 +24,19 @@ Linker Map File - Created Wed May 06 04:41:53 2020
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-                     main   0x000012    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
-                 tmr0_isr   0x000026    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                     main   0x00000e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                 tmr0_isr   0x000022    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
                toggle_led   0x00002e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
-                   while1   0x000025    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                   while1   0x000021    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
 
 
 
                               Symbols - Sorted by Address
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-                     main   0x000012    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
-                   while1   0x000025    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
-                 tmr0_isr   0x000026    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                     main   0x00000e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                   while1   0x000021    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
+                 tmr0_isr   0x000022    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
                toggle_led   0x00002e    program     static C:\Users\My PC\Documents\TP Micro\Tutorial-PIC16F877-assembly\Interruption_TIMER0_Delai\main.ASM
 
 

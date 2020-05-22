@@ -1,4 +1,4 @@
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  1
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -6,7 +6,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 
                       00001 ;**********************************************************************
                       00002 ;                                                                     *
-                      00003 ;    Filename:      inttmr0delai.asm                                  *
+                      00003 ;    Filename:      timer0counter.asm                                 *
                       00004 ;    Date:          09/04/2020                                        *
                       00005 ;                                                                     *
                       00006 ;    Author:            KHADRAOUI Ibrahim                                 *
@@ -14,25 +14,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00008 ;                                                                     * 
                       00009 ;                                                                     *
                       00010 ;**********************************************************************
-                      00011 ;**********************************************************************
-                      00012 ;                                                                     *
-                      00013 ;    Notes: On utilise une diviseur de frequence de 1/256 et notre        *
-                      00014 ;                       quartz est de 4Mhz alors notre cycle d'instruction est    *
-                      00015 ;                       de 1µs on en deduit que le timer0 s'incremente chaque     *
-                      00016 ;                       256µs(a cause du diviseur de frequence) pour obtenir un   *
-                      00017 ;                       delai de 50ms il faut que le timer0 s'incremente 195 fois *
-                      00018 ;                       alors je fais 256-195 pour trouver la valeur initial du   *
-                      00019 ;                       timer0  0x3D                                                                    
-                                              *
-                      00020 ;                                                                     *
-                      00021 ;**********************************************************************
-                      00022 ;
-                      00023 ;
-                      00024 ;*******************************************************************************************************
+                      00011 ;
+                      00012 ;
+                      00013 ;*******************************************************************************************************
                             *****************
-                      00025         list      r=dec
-                      00026         list      p=16f877            
-                      00027         #include <p16f877.inc>        
+                      00014         list      r=dec
+                      00015         list      p=16f877            
+                      00016         #include <p16f877.inc>        
                       00001         LIST
                       00002 
                       00003 ;==========================================================================
@@ -42,112 +30,104 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00007 ;==========================================================================
                       00008 
                       00540         LIST
-2007   3F3A           00028         __config 0x3f3a 
-                      00029 ;*******************************************************************************************************
+2007   3F3A           00017         __config 0x3f3a 
+                      00018 ;*******************************************************************************************************
                             *****************               
-                      00030 ;
-                      00031 ;***** variable&constants definitions
-  00000014            00032 valeur  set             20
-                      00033         cblock  20h
-  00000020            00034                 w_temp        :1
-  00000021            00035                 status_temp   :1
-  00000022            00036                 compteur          :1
-                      00037         endc
-                      00038 ;
-  00000087            00039 mask_option             equ     b'10000111'     
-  000000A0            00040 mask_interruption       equ     b'10100000'
-                      00041 ;-----------------------------------
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  2
+                      00019 ;
+                      00020 ;***** variable&constants definitions
+                      00021         cblock  20h
+  00000020            00022                 w_temp        :1
+  00000021            00023                 status_temp   :1
+  00000022            00024                 compteur          :1
+                      00025         endc
+                      00026 ;
+  000000B8            00027 mask_option             equ     b'10111000'     
+  000000A0            00028 mask_interruption       equ     b'10100000'
+                      00029 ;-----------------------------------
+                      00030         #define led PORTB,RB0
+                      00031 
+                      00032 ;-----------------------------------
+                      00033 ;***** macros definitions
+                      00034 write_reg macro register,value 
+                      00035                 banksel register
+                      00036                 movlw value
+                      00037                 movwf register
+                      00038                 endm
+                      00039 ;-----------------------------------            
+                      00040                                 
+                      00041 ;********************************************************************************
+0000                  00042                 org     0x000             ; processor reset vector                                      
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00042         #define led PORTB,RB0
-                      00043 
-                      00044 ;-----------------------------------
-                      00045 ;***** macros definitions
-                      00046 write_reg macro register,value 
-                      00047                 banksel register
-                      00048                 movlw value
-                      00049                 movwf register
-                      00050                 endm
-                      00051                 
-                      00052                                 
-                      00053 ;********************************************************************************
-0000                  00054                 org     0x000             ; processor reset vector                                      
-0000   280E           00055                 goto    main              ; go to beginning of program                          
-                      00056 ;*******************************************************************************                        
+0000   280E           00043                 goto    main              ; go to beginning of program                          
+                      00044 ;*******************************************************************************                        
                                                                                                                             
-                      00057 
-                      00058 ;********************************************************************************
-0004                  00059                 org     0x004             ; interrupt vector location                           
-0004   00A0           00060                 movwf   w_temp            ; save off current w register contents        
-0005   0803           00061                 movf    STATUS,W          ; move status register into w register        
-0006   00A1           00062                 movwf   status_temp       ; save off contents of status register        
-                      00063 ;********************************************************************************
-0007   2022           00064                 call    tmr0_isr                  
-0008   110B           00065                 bcf     INTCON,T0IF               ; set the flag to 0
-                      00066 ;********************************************************************************
-0009   0821           00067                 movf    status_temp,w     ; retrieve copy of status register
-000A   0083           00068                 movwf   STATUS            ; restore pre-isr status register contents
-000B   0EA0           00069                 swapf   w_temp,f
-000C   0E20           00070                 swapf   w_temp,w          ; restore pre-isr w register contents
-000D   0009           00071                 retfie                    ; return from interrupt
-                      00072 ;********************************************************************************
-                      00073 ;
-                      00074 ;
-000E                  00075 main
-000E   1683 1303      00076                         banksel         OPTION_REG
-0010   3087           00077                         movlw           mask_option
+                      00045 
+                      00046 ;********************************************************************************
+0004                  00047                 org     0x004             ; interrupt vector location                           
+0004   00A0           00048                 movwf   w_temp            ; save off current w register contents        
+0005   0803           00049                 movf    STATUS,W          ; move status register into w register        
+0006   00A1           00050                 movwf   status_temp       ; save off contents of status register        
+                      00051 ;********************************************************************************
+0007   201F           00052                 call    tmr0_isr                  
+0008   110B           00053                 bcf     INTCON,T0IF               ; set the flag to 0
+                      00054 ;********************************************************************************
+0009   0821           00055                 movf    status_temp,w     ; retrieve copy of status register
+000A   0083           00056                 movwf   STATUS            ; restore pre-isr status register contents
+000B   0EA0           00057                 swapf   w_temp,f
+000C   0E20           00058                 swapf   w_temp,w          ; restore pre-isr w register contents
+000D   0009           00059                 retfie                    ; return from interrupt
+                      00060 ;********************************************************************************
+                      00061 ;
+                      00062 ;
+000E                  00063 main
+000E   1683 1303      00064                         banksel         OPTION_REG
+0010   30B8           00065                         movlw           mask_option
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0011   0081           00078                         movwf           OPTION_REG
-0012   1683 1303      00079                         banksel         TRISB
+0011   0081           00066                         movwf           OPTION_REG
+0012   1683 1303      00067                         banksel         TRISB
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0014   1006           00080                         bcf             TRISB,RB0
-0015   1283 1303      00081                         banksel         compteur
-0017   3014           00082                         movlw           valeur
-0018   00A2           00083                         movwf           compteur
-                      00084                         write_reg       TMR0,0x3d
-0019   1283 1303          M                 banksel TMR0
-001B   303D               M                 movlw 0x3d
-001C   0081               M                 movwf TMR0
-001D   1283 1303      00085                         banksel         INTCON
-001F   30A0           00086                         movlw           mask_interruption
-0020   008B           00087                         movwf           INTCON
-0021                  00088 while1
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  3
+0014   1006           00068                         bcf             TRISB,RB0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0015   1605           00069                         bsf                     TRISA,RA4
+                      00070                         write_reg       TMR0,0xfb
+0016   1283 1303          M                 banksel TMR0
+0018   30FB               M                 movlw 0xfb
+0019   0081               M                 movwf TMR0
+001A   1283 1303      00071                         banksel         INTCON
+001C   30A0           00072                         movlw           mask_interruption
+001D   008B           00073                         movwf           INTCON
+001E                  00074 while1
+                      00075                         
+001E   281E           00076                 goto while1
+                      00077 ;********************************************************************************
+001F                  00078 tmr0_isr
+                      00079                         write_reg       TMR0,0xfb       
+001F   1283 1303          M                 banksel TMR0
+0021   30FB               M                 movlw 0xfb
+0022   0081               M                 movwf TMR0
+0023   2025           00080                         call            toggle_led      
+0024   0008           00081                         return
+                      00082 ;********************************************************************************               
+0025                  00083 toggle_led
+0025   1283 1303      00084                         banksel         PORTB
+0027   3001           00085                         movlw           1
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00089                         
-0021   2821           00090                 goto while1
-                      00091 ;********************************************************************************
-0022                  00092 tmr0_isr
-                      00093                         write_reg       TMR0,0x3d
-0022   1283 1303          M                 banksel TMR0
-0024   303D               M                 movlw 0x3d
-0025   0081               M                 movwf TMR0
-0026   1283 1303      00094                         banksel         PORTB           
 Message[305]: Using default destination of 1 (file).
-0028   0BA2           00095                         decfsz          compteur
-0029   0008           00096                         return
-002A   3014           00097                         movlw           valeur
-002B   00A2           00098                         movwf           compteur        
-002C   202E           00099                         call            toggle_led      
-002D   0008           00100                         return
-                      00101 ;********************************************************************************               
-002E                  00102 toggle_led
-002E   1283 1303      00103                         banksel         PORTB
-0030   3001           00104                         movlw           1
-Message[305]: Using default destination of 1 (file).
-0031   0686           00105                         xorwf           PORTB
-0032   0008           00106                         return
-                      00107 ;********************************************************************************       
-                      00108                 end
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  4
+0028   0686           00086                         xorwf           PORTB
+0029   0008           00087                         return
+                      00088 ;********************************************************************************       
+                      00089                 end
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  4
 
 
 SYMBOL TABLE
@@ -206,7 +186,7 @@ CSRC                              00000007
 D                                 00000005
 DATA_ADDRESS                      00000005
 DC                                00000001
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  5
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  5
 
 
 SYMBOL TABLE
@@ -265,7 +245,7 @@ PCFG0                             00000000
 PCFG1                             00000001
 PCFG2                             00000002
 PCFG3                             00000003
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  6
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  6
 
 
 SYMBOL TABLE
@@ -324,7 +304,7 @@ RCD8                              00000000
 RCEN                              00000003
 RCIE                              00000005
 RCIF                              00000005
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  7
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  7
 
 
 SYMBOL TABLE
@@ -383,7 +363,7 @@ T1CON                             00000010
 T1INSYNC                          00000002
 T1OSCEN                           00000003
 T1SYNC                            00000002
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  8
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  8
 
 
 SYMBOL TABLE
@@ -442,7 +422,7 @@ TRISD2                            00000002
 TRISD3                            00000003
 TRISD4                            00000004
 TRISD5                            00000005
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE  9
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE  9
 
 
 SYMBOL TABLE
@@ -501,7 +481,7 @@ _PWRTE_OFF                        00003FFF
 _PWRTE_ON                         00003FF7
 _RC_OSC                           00003FFF
 _WDTE_OFF                         00003FFB
-MPASM  5.50                          MAIN.ASM   5-21-2020  4:25:21         PAGE 10
+MPASM  5.50                          MAIN.ASM   5-21-2020  7:14:53         PAGE 10
 
 
 SYMBOL TABLE
@@ -521,25 +501,24 @@ compteur                          00000022
 led                               PORTB,RB0
 main                              0000000E
 mask_interruption                 000000A0
-mask_option                       00000087
+mask_option                       000000B8
 status_temp                       00000021
-tmr0_isr                          00000022
-toggle_led                        0000002E
-valeur                            00000014
+tmr0_isr                          0000001F
+toggle_led                        00000025
 w_temp                            00000020
-while1                            00000021
+while1                            0000001E
 write_reg                         
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
-0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXX-------------
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXX------ ----------------
 2000 : -------X-------- ---------------- ---------------- ----------------
 
 All other memory blocks unused.
 
-Program Memory Words Used:    48
-Program Memory Words Free:  8144
+Program Memory Words Used:    39
+Program Memory Words Free:  8153
 
 
 Errors   :     0

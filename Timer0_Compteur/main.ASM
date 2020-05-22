@@ -1,22 +1,11 @@
 ;**********************************************************************
 ;                                                                     *
-;    Filename:	    inttmr0delai.asm                                  *
+;    Filename:	    timer0counter.asm                                 *
 ;    Date:          09/04/2020                                        *
 ;                                                                     *
 ;    Author:		KHADRAOUI Ibrahim                                 *
 ;    Company:		USTHB FEI                                         *
 ;                                                                     * 
-;                                                                     *
-;**********************************************************************
-;**********************************************************************
-;                                                                     *
-;    Notes: On utilise une diviseur de frequence de 1/256 et notre	  *
-;			quartz est de 4Mhz alors notre cycle d'instruction est    *
-;			de 1µs on en deduit que le timer0 s'incremente chaque  	  *
-;			256µs(a cause du diviseur de frequence) pour obtenir un   *
-;			delai de 50ms il faut que le timer0 s'incremente 195 fois *
-;			alors je fais 256-195 pour trouver la valeur initial du   *
-;			timer0  0x3D											  *
 ;                                                                     *
 ;**********************************************************************
 ;
@@ -29,14 +18,13 @@
 ;************************************************************************************************************************		
 ;
 ;***** variable&constants definitions
-valeur	set		20
 	cblock 	20h
 		w_temp        :1
 		status_temp   :1
 		compteur	  :1
 	endc
 ;
-mask_option 	  	equ 	b'10000111'	
+mask_option 	  	equ 	b'10111000'	
 mask_interruption 	equ 	b'10100000'
 ;-----------------------------------
 	#define led PORTB,RB0
@@ -48,7 +36,7 @@ write_reg macro register,value
 		movlw value
 		movwf register
 		endm
-		
+;-----------------------------------		
 				
 ;********************************************************************************
 		org     0x000             ; processor reset vector					
@@ -78,10 +66,8 @@ main
 			movwf		OPTION_REG
 			banksel 	TRISB
 			bcf 		TRISB,RB0
-			banksel 	compteur
-			movlw		valeur
-			movwf		compteur
-			write_reg 	TMR0,0x3d
+			bsf			TRISA,RA4
+			write_reg 	TMR0,0xfb
 			banksel 	INTCON
 			movlw 		mask_interruption
 			movwf 		INTCON
@@ -90,12 +76,7 @@ while1
 		goto while1
 ;********************************************************************************
 tmr0_isr
-			write_reg 	TMR0,0x3d
-			banksel 	PORTB		
-			decfsz		compteur
-			return
-			movlw		valeur
-			movwf		compteur	
+			write_reg 	TMR0,0xfb	
 			call 		toggle_led	
 			return
 ;********************************************************************************		
