@@ -1,0 +1,55 @@
+## SCL Builder Setup File: Do not edit!!
+
+## VERSION: 3.60.00.00
+## FORMAT:  v2.00.01
+## DEVICE:  PIC16F877
+
+## PINREGACTIONS
+cyc
+No Repeat
+PORTB
+--
+0
+FF
+--
+&
+## ADVPINREGACTIONS
+--
+&
+--
+COND1
+Any
+
+
+
+
+
+
+--
+&
+## CLOCK
+&
+## STIMULUSFILE
+&
+## RESPONSEFILE
+&
+## ASYNCH
+Pin
+RB0
+Pulse Low
+10 cyc
+
+-1
+--
+Pin
+RB1
+Pulse Low
+10 cyc
+
+-1
+--
+&
+## ADVANCEDSCL
+
+1
+&
