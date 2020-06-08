@@ -1,4 +1,4 @@
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  1
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -36,236 +36,259 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                             DEBUG_OFF & _CPD_OFF 
                       00021 
                       00022 
-                      00023 ;***** VARIABLE DEFINITIONS
-  0000007E            00024 w_temp          equ     0x7E        ; variable used for context saving 
-  0000007F            00025 status_temp     equ     0x7F        ; variable used for context saving
-  00000020            00026 variable1               equ     0x20
-  00000021            00027 variable2               equ     0x21
-  00000022            00028 variable3               equ     0x22
-  00000023            00029 adr                             equ             0x23
-  00000024            00030 dat                             equ             0x24
-                      00031 ;***** MACRO DEFINITIONS
-                      00032 TRIG    macro
-                      00033                 banksel         PORTB
-                      00034                 bsf                     PORTB,RB4
-                      00035                 bcf                     PORTB,RB4
-                      00036                 endm
-                      00037 ;**********************************************************************
-0000                  00038                 ORG     0x000             ; processor reset vector
-0000   280D           00039                 goto    main              ; go to beginning of program
-                      00040                 
+                      00023 ;******* VARIABLE DEFINITIONS
+  00000020            00024 variable1               equ     0x20
+  00000021            00025 variable2               equ     0x21
+  00000022            00026 variable3               equ     0x22
+                      00027 
+  00000023            00028 adr_EEPROM              equ             0x23
+  00000024            00029 data_EEPROM             equ             0x24
+                      00030 
+  00000025            00031 w_temp          equ     0x25        
+  00000026            00032 status_temp     equ     0x26     
+                      00033 ;**********************************************************************
+                      00034 ;**********************************************************************
+0100                  00035                 ORG             0x100
+0100   26EF 3461 36E5 00036 texte   da      "Mohamed-Fares" 
+       322D 2361 3965 
+       3980 
+0000                  00037                 ORG     0x000             ; processor reset vector
+0000   280D           00038                 goto    main              ; go to beginning of program
+                      00039                 
+                      00040 ;**********************************************************************
                       00041 ;**********************************************************************
-                      00042 ;**********************************************************************
-0004                  00043                 ORG     0x004             ; interrupt vector location
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  2
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0004   00FE           00044                 movwf   w_temp            ; save off current W register contents
-0005   0803           00045                 movf    STATUS,w          ; move status register into W register
-0006   00FF           00046                 movwf   status_temp       ; save off contents of STATUS register
-                      00047 ;****************
-                      00048 
-                      00049 ;****************
-0007   087F           00050                 movf    status_temp,w     ; retrieve copy of STATUS register
-0008   0083           00051                 movwf   STATUS            ; restore pre-isr STATUS register contents
-0009   0EFE           00052                 swapf   w_temp,f
-000A   0E7E           00053                 swapf   w_temp,w          ; restore pre-isr W register contents
-000B   108B           00054                 bcf     INTCON,INTF
-000C   0009           00055                 retfie                    ; return from interrupt
+0004                  00042                 ORG     0x004             ; interrupt vector location
+0004   00A5           00043                 movwf   w_temp            ; save off current W register contents
+0005   0803           00044                 movf    STATUS,w          ; move status register into W register
+0006   00A6           00045                 movwf   status_temp       ; save off contents of STATUS register
+                      00046 ;****************
+0007   0826           00047                 movf    status_temp,w     ; retrieve copy of STATUS register
+0008   0083           00048                 movwf   STATUS            ; restore pre-isr STATUS register contents
+0009   0EA5           00049                 swapf   w_temp,f
+000A   0E25           00050                 swapf   w_temp,w          ; restore pre-isr W register contents
+000B   108B           00051                 bcf     INTCON,INTF
+000C   0009           00052                 retfie                    ; return from interrupt
+                      00053 ;**********************************************************************
+                      00054 ;**********************************************************************
+                      00055 
                       00056 
-                      00057 
-                      00058 
-000D                  00059 main
-000D   1283 1303      00060                 banksel         adr
-000F   01A3           00061                 clrf            adr
-0010   01A4           00062                 clrf            dat
-                      00063                 ;Config (PORTA input; PORTB output; PORTC input)
-0011   1683 1303      00064                 banksel         TRISA
-0013   301F           00065                 movlw           0x1f
+000D                  00057 main
+                      00058                 ;Mise a zero de mes deux variables (adr_EEPROM, data_EEPROM)
+000D   1283 1303      00059                 banksel         adr_EEPROM
+000F   01A3           00060                 clrf            adr_EEPROM
+0010   3030           00061                 movlw           0x30
+0011   00A4           00062                 movwf           data_EEPROM
+                      00063                 ;Config (PORTC input)
+0012   1683 1303      00064                 banksel         TRISC
+0014   30FF           00065                 movlw           0xff
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0014   0085           00066                 movwf           TRISA
+0015   0087           00066                 movwf           TRISC
+0016   1283 1303      00067                 banksel         PORTC
+                      00068                 
+                      00069                 ;Config MSSP for I2C
+0018   1683 1303      00070                 banksel         SSPSTAT         
+                      00071                 
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0015   0186           00067                 clrf            TRISB
-0016   30FF           00068                 movlw           0xff
+001A   1794           00072                 bsf                     SSPSTAT,SMP     ;In I2C Master or Slave mode:
+                      00073                                                                  ;=> 1 = Slew rate control disabled for 
+                            standard speed mode (100 kHz and 1 MHz) <=
+                      00074                                                                  ;0 = Slew rate control enabled for high
+                             speed mode (400 kHz)
+                      00075                 
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0017   0087           00069                 movwf           TRISC
-0018   1283 1303      00070                 banksel         PORTA
-001A   0185           00071                 clrf            PORTA
-                      00072                 
-                      00073                 ;Config MSSP for I2C
-001B   1683 1303      00074                 banksel         SSPSTAT
+001B   1314           00076                 bcf                     SSPSTAT,CKE     ;I2C Master or Slave mode:
+                      00077                                                                  ;1 = Input levels conform to SMBus spec
+                      00078                                                                  ;=> 0 = Input levels conform to I2C spe
+                            cs <=
+001C   1683 1303      00079                 banksel         SSPADD
+001E   3009           00080                 movlw           0x09            ; Datasheet 16F877 page 87 (9.2.8 BAUD RATE GENERATOR)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001D   1794           00075                 bsf                     SSPSTAT,SMP
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001E   1314           00076                 bcf                     SSPSTAT,CKE
-001F   1683 1303      00077                 banksel         SSPADD
-0021   3009           00078                 movlw           0x09
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0022   0093           00079                 movwf           SSPADD
-0023   1283 1303      00080                 banksel         SSPCON
-0025   3028           00081                 movlw           0x28
-0026   0094           00082                 movwf           SSPCON
-                      00083                 
-0027                  00084 infloop
-0027   207A           00085                 call            delay
-0028   204A           00086                 call            I2C_start
-0029   30A0           00087                 movlw           b'10100000'
-002A   204F           00088                 call            I2C_write
-002B   2054           00089                 call            I2C_ACK_slave_to_master
-002C   1283 1303      00090                 banksel         adr
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  3
+001F   0093           00081                 movwf           SSPADD          ;Note:Baud Rate = FOSC / (4 * (SSPADD + 1) )
+                      00082                 
+0020   1283 1303      00083                 banksel         SSPCON
+0022   3028           00084                 movlw           0x28            ; Datasheet page 69 (REGISTER 9-2: SSPCON: SYNC SERIAL P
+                            ORT CONTROL REGISTER (ADDRESS 14h))
+0023   0094           00085                 movwf           SSPCON          ;
+                      00086                 
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-002E   0823           00091                 movf            adr,w
-002F   204F           00092                 call            I2C_write
-0030   2054           00093                 call            I2C_ACK_slave_to_master
-0031   08A4           00094                 movf            dat,f
-0032   204F           00095                 call            I2C_write
-0033   2054           00096                 call            I2C_ACK_slave_to_master
-0034   2075           00097                 call            I2C_stop
-0035   1283 1303      00098                 banksel         adr
-0037   0AA3           00099                 incf            adr,f
-0038   0AA4           00100                 incf            dat,f           
-0039   207A           00101                 call            delay
-003A   2827           00102                 goto infloop
-                      00103 
-                      00104 ;************************************************************************
-                      00105 ;I2C sous-fontions
-003B                  00106 I2C_idle
-003B   1683 1303      00107                 banksel         SSPCON2
-003D                  00108 I2C_idle_label
+0024   1283 1303      00087                 banksel         PORTC
+0026   1C07           00088                 btfss           PORTC,RC0
+0027   2826           00089                 goto            $-1
+0028                  00090 infloop
+0028   204E           00091                 call            I2C_start       ;Lancer une condition Start
+0029   30A0           00092                 movlw           b'10100000'     ;Mettre l'adresse de l'esclave dans W suivi du bit R/W
+002A   2053           00093                 call            I2C_write       ;Ecrire le contenu de W dans le bus I2C
+002B   2058           00094                 call            I2C_ACK_slave_to_master ;Attendre l'ACK de l'esclave
+002C   1283 1303      00095                 banksel         adr_EEPROM
+002E   0823           00096                 movf            adr_EEPROM,W    ;Adresse interne de l'EEPROM    
+002F   2053           00097                 call            I2C_write               ;Envoyer cette adresse pour informer l'EEPROM qu
+                            'on veut ecire sur cette adresse
+0030   2058           00098                 call            I2C_ACK_slave_to_master ;Attende l'ACK de l'esclave  
+0031   1283 1303      00099                 banksel         data_EEPROM
+0033   0824           00100                 movf            data_EEPROM,W   ;Donnee qu'on veut ecrire dans l'EEPROM
+0034   2053           00101                 call            I2C_write               ;Envoyer cette donnee a l'EEPROM
+0035   2058           00102                 call            I2C_ACK_slave_to_master ;Attendre l'ACK de l'esclave
+0036   2079           00103                 call            I2C_stop        ;Lancer uen condition Stop pour terminer la communicatio
+                            n       
+0037   1283 1303      00104                 banksel         adr_EEPROM
+0039   0FA3           00105                 incfsz          adr_EEPROM,F ;incrementer l'adresse de l'EEPROM
+Message[305]: Using default destination of 1 (file).
+003A   0FA4           00106                 incfsz          data_EEPROM             
+003B   207E           00107                 call            delay
+003C   2828           00108                 goto infloop
+                      00109 
+                      00110 ;************************************************************************
+                      00111 ;I2C sous-fontions
+003D                  00112 I2C_idle        ;Verifie si aucune operation n'est en cours
+                      00113                         ;;Utiliser avant chaque etape pour laisser le temps
+                      00114                         ;;a l'etape precedente de se terminer
+003D   1683 1303      00115                 banksel         SSPCON2
+003F                  00116 I2C_idle_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003D   1A11           00109                 btfsc           SSPCON2,ACKEN
-003E   283D           00110                 goto            I2C_idle_label
+003F   1A11           00117                 btfsc           SSPCON2,ACKEN   ;Si = 0 => sequence ACK termine
+0040   283F           00118                 goto            I2C_idle_label  
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003F   1991           00111                 btfsc           SSPCON2,RCEN
-0040   283D           00112                 goto            I2C_idle_label
+0041   1991           00119                 btfsc           SSPCON2,RCEN    ;Si = 0 => sequence Repeated Start termine
+0042   283F           00120                 goto            I2C_idle_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0041   1911           00113                 btfsc           SSPCON2,PEN
-0042   283D           00114                 goto            I2C_idle_label
+0043   1911           00121                 btfsc           SSPCON2,PEN             ;Si = 0 => sequence Stop termine
+0044   283F           00122                 goto            I2C_idle_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0043   1891           00115                 btfsc           SSPCON2,RSEN
-0044   283D           00116                 goto            I2C_idle_label
+0045   1891           00123                 btfsc           SSPCON2,RSEN    ;Si = 0 => sequence Receive termine
+0046   283F           00124                 goto            I2C_idle_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0045   1811           00117                 btfsc           SSPCON2,SEN
-0046   283D           00118                 goto            I2C_idle_label
+0047   1811           00125                 btfsc           SSPCON2,SEN             ;Si = 0 => sequence Start termine
+0048   283F           00126                 goto            I2C_idle_label
+0049   1683 1303      00127                 banksel         SSPSTAT
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0047   1914           00119                 btfsc           SSPSTAT,R_W
-0048   283D           00120                 goto            I2C_idle_label 
-0049   0008           00121                 return
-                      00122 ;**************
-004A                  00123 I2C_start
-004A   203B           00124                 call            I2C_idle
-004B   1683 1303      00125                 banksel         SSPCON2 
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-004D   1411           00126                 bsf             SSPCON2,SEN
-004E   0008           00127                 return
-                      00128 ;**************
-004F                  00129 I2C_write
-004F   203B           00130                 call            I2C_idle
-0050   1283 1303      00131                 banksel         SSPBUF
-0052   0093           00132                 movwf           SSPBUF
-0053   0008           00133                 return
-                      00134 ;**************
-0054                  00135 I2C_ACK_slave_to_master
-0054   203B           00136                 call            I2C_idle 
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  4
+004B   1914           00128                 btfsc           SSPSTAT,R_W             ;Si = 0 => aucune transmission en cours
+004C   283F           00129                 goto            I2C_idle_label
+004D   0008           00130                 return
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0055   1683 1303      00137                 banksel         SSPCON2
-0057                  00138 I2C_ACK_slave_to_master_label
+                      00131 ;**************
+004E                  00132 I2C_start       ;Lancer une sequence Start
+004E   203D           00133                 call            I2C_idle
+004F   1683 1303      00134                 banksel         SSPCON2 
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0057   1B11           00139                 btfsc           SSPCON2,ACKSTAT
-0058   2857           00140                 goto            I2C_ACK_slave_to_master_label
-0059   0008           00141                 return
-                      00142 ;**************
-005A                  00143 I2C_Repeated_Start
-005A   203B           00144                 call            I2C_idle
-005B   1683 1303      00145                 banksel         SSPCON2
+0051   1411           00135                 bsf             SSPCON2,SEN
+0052   0008           00136                 return
+                      00137 ;**************
+0053                  00138 I2C_write       ;Ecrire le contenue de W dans le bus I2C
+0053   203D           00139                 call            I2C_idle
+0054   1283 1303      00140                 banksel         SSPBUF
+0056   0093           00141                 movwf           SSPBUF
+0057   0008           00142                 return
+                      00143 ;**************
+0058                  00144 I2C_ACK_slave_to_master ;Attendre l'ACK de l'esclave
+0058   203D           00145                 call            I2C_idle 
+0059   1683 1303      00146                 banksel         SSPCON2
+005B                  00147 I2C_ACK_slave_to_master_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-005D   1491           00146                 bsf             SSPCON2,RSEN
-005E   0008           00147                 return
-                      00148 ;**************         
-005F                  00149 I2C_read
-005F   203B           00150                 call            I2C_idle 
-0060   1683 1303      00151                 banksel         SSPCON2
+005B   1B11           00148                 btfsc           SSPCON2,ACKSTAT ;I2C ACKSTAT: Acknowledge Status bit (InMaster mode only
+                            )
+                      00149                                                                         ;In Master Transmit mode:
+                      00150                                                                          ;1 = Acknowledge was not receiv
+                            ed from slave
+                      00151                                                                          ;0 = Acknowledge was received f
+                            rom slave
+                      00152 
+005C   285B           00153                 goto            I2C_ACK_slave_to_master_label
+005D   0008           00154                 return
+                      00155 ;**************
+005E                  00156 I2C_Repeated_Start      ;Lancer une sequence Repeated Start
+005E   203D           00157                 call            I2C_idle
+005F   1683 1303      00158                 banksel         SSPCON2
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0062   1591           00152                 bsf             SSPCON2,RCEN 
-0063                  00153 I2C_read_label
+0061   1491           00159                 bsf             SSPCON2,RSEN
+0062   0008           00160                 return
+                      00161 ;**************         
+0063                  00162 I2C_read                ;Lire le contenue du bus I2C est le mettre dans W
+0063   203D           00163                 call            I2C_idle 
+0064   1683 1303      00164                 banksel         SSPCON2
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0063   1991           00154                 btfsc           SSPCON2,RCEN
-0064   2863           00155                 goto            I2C_read_label
-0065   1283 1303      00156                 banksel         SSPBUF
-0067   0813           00157                 movf            SSPBUF,W
-0068   0008           00158                 return
-                      00159 ;**************
-0069                  00160 I2C_ACK_master_to_slave
-0069   203B           00161                 call            I2C_idle
-006A   1683 1303      00162                 banksel         SSPCON2
+0066   1591           00165                 bsf             SSPCON2,RCEN 
+0067                  00166 I2C_read_label
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-006C   1291           00163                 bcf             SSPCON2 , ACKDT
+0067   1991           00167                 btfsc           SSPCON2,RCEN
+0068   2867           00168                 goto            I2C_read_label
+0069   1283 1303      00169                 banksel         SSPBUF
+006B   0813           00170                 movf            SSPBUF,W
+006C   0008           00171                 return
+                      00172 ;**************
+006D                  00173 I2C_ACK_master_to_slave ;Lancer une sequence ACK
+006D   203D           00174                 call            I2C_idle
+006E   1683 1303      00175                 banksel         SSPCON2
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-006D   1611           00164                 bsf             SSPCON2 , ACKEN
-006E   0008           00165                 return
-                      00166 ;**************
-006F                  00167 I2C_NOACK
-006F   203B           00168                 call            I2C_idle
-0070   1683 1303      00169                 banksel         SSPCON2
+0070   1291           00176                 bcf             SSPCON2 , ACKDT ;ACKDT = 0 pour ACK
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0072   1691           00170                 bsf             SSPCON2 , ACKDT
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0073   1611           00171                 bsf             SSPCON2 , ACKEN 
-0074   0008           00172                 return
-                      00173 ;**************
-0075                  00174 I2C_stop
-0075   203B           00175                 call            I2C_idle
-0076   1683 1303      00176                 banksel         SSPCON2
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0078   1511           00177                 bsf             SSPCON2,PEN
-0079   0008           00178                 return
+0071   1611           00177                 bsf             SSPCON2 , ACKEN ;Lancer une sequence ACK
+0072   0008           00178                 return
                       00179 ;**************
-                      00180 ;************************************************************************
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  5
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-007A                  00181 delay
-007A   30FF           00182                 movlw           0xff
-007B   00A0           00183                 movwf           variable1
-007C   00A1           00184                 movwf           variable2
-007D   3005           00185                 movlw           0x05
-007E   00A2           00186                 movwf           variable3
-007F                  00187 b1
+0073                  00180 I2C_NOACK       ;Lancer une sequence NOACK
+0073   203D           00181                 call            I2C_idle
+0074   1683 1303      00182                 banksel         SSPCON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0076   1691           00183                 bsf             SSPCON2 , ACKDT ;ACKDT = 1 pour NOACK
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0077   1611           00184                 bsf             SSPCON2 , ACKEN ;Lancer une sequence NOACK
+0078   0008           00185                 return
+                      00186 ;**************
+0079                  00187 I2C_stop        ;Lancer une sequence Stop
+0079   203D           00188                 call            I2C_idle
+007A   1683 1303      00189                 banksel         SSPCON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+007C   1511           00190                 bsf             SSPCON2,PEN
+007D   0008           00191                 return
+                      00192 ;**************
+                      00193 ;************************************************************************
+007E                  00194 delay           ;Routine de delai (1s)
+007E   30FF           00195                 movlw           0xff
+007F   00A0           00196                 movwf           variable1
+0080   00A1           00197                 movwf           variable2
+0081   3005           00198                 movlw           0x05
+0082   00A2           00199                 movwf           variable3
+0083                  00200 b1
 Message[305]: Using default destination of 1 (file).
-007F   0BA0           00188                 decfsz          variable1
-0080   287F           00189                 goto            b1
-0081   30FF           00190                 movlw           0xff
-0082   00A0           00191                 movwf           variable1
+0083   0BA0           00201                 decfsz          variable1
+0084   2883           00202                 goto            b1
+0085   30FF           00203                 movlw           0xff
+0086   00A0           00204                 movwf           variable1
 Message[305]: Using default destination of 1 (file).
-0083   0BA1           00192                 decfsz          variable2
-0084   287F           00193                 goto            b1
-0085   30FF           00194                 movlw           0xff
-0086   00A1           00195                 movwf           variable2
+0087   0BA1           00205                 decfsz          variable2
+0088   2883           00206                 goto            b1
+0089   30FF           00207                 movlw           0xff
+008A   00A1           00208                 movwf           variable2
 Message[305]: Using default destination of 1 (file).
-0087   0BA2           00196                 decfsz          variable3
-0088   287F           00197                 goto            b1
-0089   3005           00198                 movlw           0x05
-008A   00A2           00199                 movwf           variable3
-008B   0008           00200                 return
-                      00201 ;************************************************************************
-                      00202                 end                       
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  6
+008B   0BA2           00209                 decfsz          variable3
+008C   2883           00210                 goto            b1
+008D   3005           00211                 movlw           0x05
+008E   00A2           00212                 movwf           variable3
+008F   0008           00213                 return
+                      00214 ;************************************************************************       
+                      00215                 end                       
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  6
 
 
 SYMBOL TABLE
@@ -324,7 +347,7 @@ CSRC                              00000007
 D                                 00000005
 DATA_ADDRESS                      00000005
 DC                                00000001
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  7
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  7
 
 
 SYMBOL TABLE
@@ -349,22 +372,22 @@ GIE                               00000007
 GO                                00000002
 GO_DONE                           00000002
 GO_NOT_DONE                       00000002
-I2C_ACK_master_to_slave           00000069
-I2C_ACK_slave_to_master           00000054
-I2C_ACK_slave_to_master_label     00000057
+I2C_ACK_master_to_slave           0000006D
+I2C_ACK_slave_to_master           00000058
+I2C_ACK_slave_to_master_label     0000005B
 I2C_DATA                          00000005
-I2C_NOACK                         0000006F
+I2C_NOACK                         00000073
 I2C_READ                          00000002
-I2C_Repeated_Start                0000005A
+I2C_Repeated_Start                0000005E
 I2C_START                         00000003
 I2C_STOP                          00000004
-I2C_idle                          0000003B
-I2C_idle_label                    0000003D
-I2C_read                          0000005F
-I2C_read_label                    00000063
-I2C_start                         0000004A
-I2C_stop                          00000075
-I2C_write                         0000004F
+I2C_idle                          0000003D
+I2C_idle_label                    0000003F
+I2C_read                          00000063
+I2C_read_label                    00000067
+I2C_start                         0000004E
+I2C_stop                          00000079
+I2C_write                         00000053
 IBF                               00000007
 IBOV                              00000005
 INDF                              00000000
@@ -383,7 +406,7 @@ NOT_POR                           00000001
 NOT_RBPU                          00000007
 NOT_RC8                           00000006
 NOT_T1SYNC                        00000002
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  8
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  8
 
 
 SYMBOL TABLE
@@ -442,7 +465,7 @@ RBIE                              00000003
 RBIF                              00000000
 RC0                               00000000
 RC1                               00000001
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE  9
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE  9
 
 
 SYMBOL TABLE
@@ -501,7 +524,7 @@ SSPM2                             00000002
 SSPM3                             00000003
 SSPOV                             00000006
 SSPSTAT                           00000094
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE 10
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE 10
 
 
 SYMBOL TABLE
@@ -540,7 +563,6 @@ TOUTPS0                           00000003
 TOUTPS1                           00000004
 TOUTPS2                           00000005
 TOUTPS3                           00000006
-TRIG                              
 TRISA                             00000085
 TRISA0                            00000000
 TRISA1                            00000001
@@ -560,13 +582,13 @@ TRISB7                            00000007
 TRISC                             00000087
 TRISC0                            00000000
 TRISC1                            00000001
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE 11
+TRISC2                            00000002
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TRISC2                            00000002
 TRISC3                            00000003
 TRISC4                            00000004
 TRISC5                            00000005
@@ -619,13 +641,13 @@ _DEVID1                           00002006
 _FOSC_EXTRC                       00003FFF
 _FOSC_HS                          00003FFE
 _FOSC_LP                          00003FFC
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE 12
+_FOSC_XT                          00003FFD
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE 12
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-_FOSC_XT                          00003FFD
 _HS_OSC                           00003FFE
 _IDLOC0                           00002000
 _IDLOC1                           00002001
@@ -648,33 +670,35 @@ _WRT_ON                           00003FFF
 _XT_OSC                           00003FFD
 __16F877                          00000001
 __DEBUG                           1
-adr                               00000023
-b1                                0000007F
-dat                               00000024
-delay                             0000007A
-infloop                           00000027
+adr_EEPROM                        00000023
+b1                                00000083
+data_EEPROM                       00000024
+delay                             0000007E
+infloop                           00000028
 main                              0000000D
-status_temp                       0000007F
+status_temp                       00000026
+texte                             00000100
 variable1                         00000020
 variable2                         00000021
 variable3                         00000022
-w_temp                            0000007E
+w_temp                            00000025
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
 0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
 0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
-0080 : XXXXXXXXXXXX---- ---------------- ---------------- ----------------
+0080 : XXXXXXXXXXXXXXXX ---------------- ---------------- ----------------
+0100 : XXXXXXX--------- ---------------- ---------------- ----------------
 2000 : -------X-------- ---------------- ---------------- ----------------
 
 All other memory blocks unused.
 
-Program Memory Words Used:   137
-Program Memory Words Free:  8055
+Program Memory Words Used:   148
+Program Memory Words Free:  8044
 
 
-MPASM  5.50                          MAIN.ASM   5-2-2020  0:57:40         PAGE 13
+MPASM  5.50                          MAIN.ASM   6-7-2020  23:29:55         PAGE 13
 
 
 
@@ -682,6 +706,6 @@ Program Memory Words Free:  8055
 
 Errors   :     0
 Warnings :     0 reported,     0 suppressed
-Messages :    25 reported,     0 suppressed
+Messages :    24 reported,     0 suppressed
 
 

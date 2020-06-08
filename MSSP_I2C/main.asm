@@ -20,19 +20,20 @@
 	__CONFIG _CP_OFF & _WDT_OFF & _BODEN_OFF & _PWRTE_OFF & _HS_OSC & _WRT_ENABLE_OFF & _LVP_OFF & _DEBUG_OFF & _CPD_OFF 
 
 
-;***** VARIABLE DEFINITIONS
-w_temp        	equ     0x7E        ; variable used for context saving 
-status_temp   	equ     0x7F        ; variable used for context saving
-
+;******* VARIABLE DEFINITIONS
 variable1 		equ 	0x20
 variable2 		equ 	0x21
 variable3 		equ 	0x22
 
-adr				equ		0x23
-dat				equ		0x24
+adr_EEPROM		equ		0x23
+data_EEPROM		equ		0x24
 
+w_temp        	equ     0x25        
+status_temp   	equ     0x26	 
 ;**********************************************************************
 ;**********************************************************************
+		ORG		0x100
+texte	da	"Mohamed-Fares"	
 		ORG     0x000             ; processor reset vector
   		goto    main              ; go to beginning of program
 		
@@ -54,97 +55,111 @@ dat				equ		0x24
 
 
 main
-		;Mise a zero de mes deux variables (adr, dat)
-		banksel		adr
-		clrf		adr
-		clrf		dat
-		;Config	(PORTA input; PORTB output; PORTC input)
-		banksel		TRISA
-		movlw		0x1f
-		movwf		TRISA
-		clrf		TRISB
+		;Mise a zero de mes deux variables (adr_EEPROM, data_EEPROM)
+		banksel		adr_EEPROM
+		clrf		adr_EEPROM
+		movlw		0x30
+		movwf		data_EEPROM
+		;Config	(PORTC input)
+		banksel		TRISC
 		movlw		0xff
 		movwf		TRISC
-		banksel		PORTA
-		clrf		PORTA
+		banksel		PORTC
 		
 		;Config MSSP for I2C
-		banksel		SSPSTAT
-		bsf			SSPSTAT,SMP
-		bcf			SSPSTAT,CKE
-		banksel		SSPADD
-		movlw		0x09
-		movwf		SSPADD
-		banksel		SSPCON
-		movlw		0x28
-		movwf		SSPCON
+		banksel		SSPSTAT		
 		
+		bsf			SSPSTAT,SMP	;In I2C Master or Slave mode:
+								 ;=> 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz) <=
+							 	 ;0 = Slew rate control enabled for high speed mode (400 kHz)
+		
+		bcf			SSPSTAT,CKE	;I2C Master or Slave mode:
+								 ;1 = Input levels conform to SMBus spec
+								 ;=> 0 = Input levels conform to I2C specs <=
+		banksel		SSPADD
+		movlw		0x09		; Datasheet 16F877 page 87 (9.2.8 BAUD RATE GENERATOR)
+		movwf		SSPADD		;Note:Baud Rate = FOSC / (4 * (SSPADD + 1) )
+		
+		banksel		SSPCON
+		movlw		0x28		; Datasheet page 69 (REGISTER 9-2: SSPCON: SYNC SERIAL PORT CONTROL REGISTER (ADDRESS 14h))
+		movwf		SSPCON		;
+		
+		banksel		PORTC
+		btfss		PORTC,RC0
+		goto		$-1
 infloop
-		call 		delay
-		call		I2C_start
-		movlw		b'10100000'
-		call		I2C_write
-		call		I2C_ACK_slave_to_master
-		banksel		adr
-		movf		adr,w
-		call		I2C_write
-		call		I2C_ACK_slave_to_master
-		movf		dat,f
-		call		I2C_write
-		call		I2C_ACK_slave_to_master
-		call		I2C_stop
-		banksel		adr
-		incf		adr,f
-		incf		dat,f		
+		call		I2C_start	;Lancer une condition Start
+		movlw		b'10100000'	;Mettre l'adresse de l'esclave dans W suivi du bit R/W
+		call		I2C_write	;Ecrire le contenu de W dans le bus I2C
+		call		I2C_ACK_slave_to_master	;Attendre l'ACK de l'esclave
+		banksel		adr_EEPROM
+		movf		adr_EEPROM,W	;Adresse interne de l'EEPROM	
+		call		I2C_write		;Envoyer cette adresse pour informer l'EEPROM qu'on veut ecire sur cette adresse
+		call		I2C_ACK_slave_to_master	;Attende l'ACK de l'esclave  
+		banksel		data_EEPROM
+		movf		data_EEPROM,W	;Donnee qu'on veut ecrire dans l'EEPROM
+		call		I2C_write		;Envoyer cette donnee a l'EEPROM
+		call		I2C_ACK_slave_to_master	;Attendre l'ACK de l'esclave
+		call		I2C_stop	;Lancer uen condition Stop pour terminer la communication	
+		banksel		adr_EEPROM
+		incfsz		adr_EEPROM,F ;incrementer l'adresse de l'EEPROM
+		incfsz		data_EEPROM		
 		call 		delay
 		goto infloop
 
 ;************************************************************************
 ;I2C sous-fontions
-I2C_idle
+I2C_idle	;Verifie si aucune operation n'est en cours
+			;;Utiliser avant chaque etape pour laisser le temps
+			;;a l'etape precedente de se terminer
 		banksel		SSPCON2
 I2C_idle_label
-		btfsc 		SSPCON2,ACKEN
+		btfsc 		SSPCON2,ACKEN	;Si = 0 => sequence ACK termine
+		goto 		I2C_idle_label	
+		btfsc 		SSPCON2,RCEN	;Si = 0 => sequence Repeated Start termine
 		goto 		I2C_idle_label
-		btfsc 		SSPCON2,RCEN
+		btfsc 		SSPCON2,PEN		;Si = 0 => sequence Stop termine
 		goto 		I2C_idle_label
-		btfsc 		SSPCON2,PEN
+		btfsc 		SSPCON2,RSEN	;Si = 0 => sequence Receive termine
 		goto 		I2C_idle_label
-		btfsc 		SSPCON2,RSEN
+		btfsc 		SSPCON2,SEN		;Si = 0 => sequence Start termine
 		goto 		I2C_idle_label
-		btfsc 		SSPCON2,SEN
+		banksel		SSPSTAT
+		btfsc 		SSPSTAT,R_W		;Si = 0 => aucune transmission en cours
 		goto 		I2C_idle_label
-		btfsc 		SSPSTAT,R_W
-		goto 		I2C_idle_label 
 		return
 ;**************
-I2C_start
+I2C_start	;Lancer une sequence Start
 		call 		I2C_idle
 		banksel		SSPCON2 
 		bsf 		SSPCON2,SEN
 		return
 ;**************
-I2C_write
+I2C_write	;Ecrire le contenue de W dans le bus I2C
 		call 		I2C_idle
 		banksel		SSPBUF
 		movwf 		SSPBUF
 		return
 ;**************
-I2C_ACK_slave_to_master
+I2C_ACK_slave_to_master	;Attendre l'ACK de l'esclave
 		call 		I2C_idle 
 		banksel		SSPCON2
 I2C_ACK_slave_to_master_label
-		btfsc 		SSPCON2,ACKSTAT
+		btfsc 		SSPCON2,ACKSTAT	;I2C ACKSTAT: Acknowledge Status bit (InMaster mode only)
+									;In Master Transmit mode:
+									 ;1 = Acknowledge was not received from slave
+									 ;0 = Acknowledge was received from slave
+
 		goto 		I2C_ACK_slave_to_master_label
 		return
 ;**************
-I2C_Repeated_Start
+I2C_Repeated_Start	;Lancer une sequence Repeated Start
 		call 		I2C_idle
 		banksel		SSPCON2
 		bsf 		SSPCON2,RSEN
 		return
 ;**************		
-I2C_read
+I2C_read		;Lire le contenue du bus I2C est le mettre dans W
 		call 		I2C_idle 
 		banksel		SSPCON2
 		bsf 		SSPCON2,RCEN 
@@ -155,28 +170,28 @@ I2C_read_label
 		movf 		SSPBUF,W
 		return
 ;**************
-I2C_ACK_master_to_slave
+I2C_ACK_master_to_slave	;Lancer une sequence ACK
 		call 		I2C_idle
 		banksel		SSPCON2
-		bcf 		SSPCON2 , ACKDT
-		bsf 		SSPCON2 , ACKEN
+		bcf 		SSPCON2 , ACKDT	;ACKDT = 0 pour ACK
+		bsf 		SSPCON2 , ACKEN	;Lancer une sequence ACK
 		return
 ;**************
-I2C_NOACK
+I2C_NOACK	;Lancer une sequence NOACK
 		call 		I2C_idle
 		banksel		SSPCON2
-		bsf 		SSPCON2 , ACKDT
-		bsf 		SSPCON2 , ACKEN 
+		bsf 		SSPCON2 , ACKDT	;ACKDT = 1 pour NOACK
+		bsf 		SSPCON2 , ACKEN ;Lancer une sequence NOACK
 		return
 ;**************
-I2C_stop
+I2C_stop	;Lancer une sequence Stop
 		call 		I2C_idle
 		banksel		SSPCON2
 		bsf 		SSPCON2,PEN
 		return
 ;**************
 ;************************************************************************
-delay
+delay		;Routine de delai (1s)
 		movlw 		0xff
 		movwf 		variable1
 		movwf 		variable2
@@ -196,5 +211,5 @@ b1
 		movlw 		0x05
 		movwf 		variable3
 		return
-;************************************************************************
+;************************************************************************	
 		end                       
