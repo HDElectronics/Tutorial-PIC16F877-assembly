@@ -1,0 +1,553 @@
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;**********************************************************************
+                      00002 ;                                                                     *
+                      00003 ;    Filename:      ADC                                                           *
+                      00004 ;    Date:          16/06/2020                                        *
+                      00005 ;                                                                     *
+                      00006 ;    Author:            KHADRAOUI Ibrahim                                 *
+                      00007 ;    Company:           USTHB FEI                                         *
+                      00008 ;                                                                     * 
+                      00009 ;                                                                     *
+                      00010 ;**********************************************************************
+                      00011 ;**********************************************************************
+                      00012 ;                                                                     *
+                      00013 ;    Notes:                                                           *
+                      00014 ;                                                                     *
+                      00015 ;**********************************************************************
+                      00016 
+                      00017         list      r=dec
+                      00018         list      p=16f877            
+                      00019         #include <p16f877.inc>        
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F877 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      00540         LIST
+                      00020         
+2007   3D3A           00021         __CONFIG _CP_OFF & _WDT_OFF & _BODEN_OFF & _PWRTE_OFF & _HS_OSC & _WRT_ENABLE_OFF & _LVP_OFF & _
+                            DEBUG_OFF & _CPD_OFF 
+                      00022 
+                      00023 
+                      00024 ;******* VARIABLE DEFINITIONS
+                      00025         cblock 0x20
+  00000020            00026 variable1               :1
+  00000021            00027 variable2               :1
+  00000022            00028 variable3               :1
+  00000023            00029 wait                    :1
+                      00030 
+  00000024            00031 adr_EEPROM              :1
+                      00032 
+  00000025            00033 w_temp          :1
+  00000026            00034 status_temp     :1
+  00000027            00035 ptr                             :1
+                      00036         endc
+                      00037 ;**********************************************************************
+                      00038 ;**********************************************************************
+0000                  00039                 ORG     0x000             ; processor reset vector
+0000   280C           00040                 goto    main              ; go to beginning of program
+                      00041                 
+                      00042 ;**********************************************************************
+                      00043 ;**********************************************************************
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0004                  00044                 ORG     0x004             ; interrupt vector location
+0004   00A5           00045                 movwf   w_temp            ; save off current W register contents
+0005   0803           00046                 movf    STATUS,w          ; move status register into W register
+0006   00A6           00047                 movwf   status_temp       ; save off contents of STATUS register
+                      00048 ;****************
+0007   0826           00049                 movf    status_temp,w     ; retrieve copy of STATUS register
+0008   0083           00050                 movwf   STATUS            ; restore pre-isr STATUS register contents
+0009   0EA5           00051                 swapf   w_temp,f
+000A   0E25           00052                 swapf   w_temp,w          ; restore pre-isr W register contents
+000B   0009           00053                 retfie                    ; return from interrupt
+                      00054 ;**********************************************************************
+                      00055 ;**********************************************************************
+                      00056 
+                      00057 
+000C                  00058 main
+                      00059                 ;Configurations des Port(E/S):
+000C   1683 1303      00060                 banksel         TRISA
+000E   30FF           00061                 movlw           0xff
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000F   0085           00062                 movwf           TRISA   ;PORTA en Entree
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0010   0186           00063                 clrf            TRISB   ;PORTB en Sortie
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0011   0187           00064                 clrf            TRISC   ;PORTC en Sortie
+                      00065                                         
+                      00066                 
+0012   1683 1303      00067                 banksel         ADCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0014   019F           00068                 clrf            ADCON1           ;Mettre tous les bits à 0
+                      00069                                                                  ;PCFG3:PCFG0 = 0000 => tous les pin du 
+                            PORTA
+                      00070                                                                  ;sont en mode analogique et les deux re
+                            ferences
+                      00071                                                                  ;Vref+ et Vref- sont connecte a VCC et 
+                            GND
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0015   179F           00072                 bsf                     ADCON1,ADFM      ;Mettre à 1 le bit ADFM => Right Justified
+                      00073                 
+                      00074                 
+0016   1283 1303      00075                 banksel         ADCON0           ;AD Conversion Clock:
+0018   139F           00076                 bcf                     ADCON0,ADCS1 ;Mettre à 0 le bit ADCS1
+0019   171F           00077                 bsf                     ADCON0,ADCS0 ;Mettre à 1 le bit ADCS0 => 01 => Fosc/8           
+                      00078                 
+                      00079 
+001A                  00080 begin
+001A   1283 1303      00081                 banksel         ADCON0
+001C   141F           00082                 bsf                     ADCON0,ADON  ;Mettre en mode le module en marche
+                      00083                 
+001D   1283 1303      00084                 banksel         wait    ;Attendre le temps d'acquisition
+001F   3028           00085                 movlw           .40
+0020   00A3           00086                 movwf           wait
+Message[305]: Using default destination of 1 (file).
+0021   0BA3           00087                 decfsz          wait
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0022   2821           00088                 goto            $-1
+                      00089                 
+0023   1283 1303      00090                 banksel         ADCON0          ;Demmarer la conversion
+0025   151F           00091                 bsf                     ADCON0,GO
+                      00092                 
+0026   191F           00093                 btfsc           ADCON0,GO       ;Attendre la fin de la conversion 
+0027   2826           00094                 goto            $-1
+                      00095                 
+0028   1683 1303      00096                 banksel         ADRESL          ;Lecture des valeurs converties
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002A   081E           00097                 movf            ADRESL,W        ;et les afficher sur le PORTB
+002B   1283 1303      00098                 banksel         PORTB           ;et le PORTC
+002D   0086           00099                 movwf           PORTB           ; ADRESL => PORTB et ARESH => PORTC
+002E   1283 1303      00100                 banksel         ADRESH          
+0030   081E           00101                 movf            ADRESH,W
+0031   1283 1303      00102                 banksel     PORTC
+0033   0087           00103                 movwf           PORTC
+0034   3004           00104                 movlw           4
+0035   00A3           00105                 movwf           wait
+Message[305]: Using default destination of 1 (file).
+0036   0BA3           00106                 decfsz          wait
+0037   2836           00107                 goto            $-1
+                      00108                 
+0038   281A           00109                 goto begin
+                      00110 
+                      00111 ;************************************************************************
+                      00112 
+                      00113 ;************************************************************************
+                      00114 
+                      00115 ;************************************************************************       
+                      00116                 end                       
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  4
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRGH                              00000002
+C                                 00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+CHS1                              00000004
+CHS2                              00000005
+CKE                               00000006
+CKP                               00000004
+CREN                              00000004
+CSRC                              00000007
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  5
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+D_A                               00000005
+D_NOT_A                           00000005
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GO_NOT_DONE                       00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+IBF                               00000007
+IBOV                              00000005
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OBF                               00000006
+OERR                              00000001
+OPTION_REG                        00000081
+P                                 00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  6
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSPIE                             00000007
+PSPIF                             00000007
+PSPMODE                           00000004
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  7
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SEN                               00000000
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+W                                 00000000
+WCOL                              00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00000FCF
+_CP_HALF                          00001FDF
+_CP_OFF                           00003FFF
+_CP_UPPER_256                     00002FEF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_DEVID1                           00002006
+_FOSC_EXTRC                       00003FFF
+_FOSC_HS                          00003FFE
+_FOSC_LP                          00003FFC
+_FOSC_XT                          00003FFD
+_HS_OSC                           00003FFE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDTE_OFF                         00003FFB
+MPASM  5.50                          MAIN.ASM   6-16-2020  22:38:19         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_ENABLE_OFF                   00003DFF
+_WRT_ENABLE_ON                    00003FFF
+_WRT_OFF                          00003DFF
+_WRT_ON                           00003FFF
+_XT_OSC                           00003FFD
+__16F877                          00000001
+__DEBUG                           1
+adr_EEPROM                        00000024
+begin                             0000001A
+main                              0000000C
+ptr                               00000027
+status_temp                       00000026
+variable1                         00000020
+variable2                         00000021
+variable3                         00000022
+w_temp                            00000025
+wait                              00000023
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXX-------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    54
+Program Memory Words Free:  8138
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     8 reported,     0 suppressed
+
+

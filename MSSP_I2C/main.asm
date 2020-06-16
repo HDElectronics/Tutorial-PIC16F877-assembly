@@ -1,7 +1,7 @@
 ;**********************************************************************
 ;                                                                     *
 ;    Filename:	    MSSP_I2C		                                  *
-;    Date:          01/05/2020                                        *
+;    Date:          10/06/2020                                        *
 ;                                                                     *
 ;    Author:		KHADRAOUI Ibrahim                                 *
 ;    Company:		USTHB FEI                                         *
@@ -14,6 +14,7 @@
 ;                                                                     *
 ;**********************************************************************
 
+	list	  r=dec
 	list      p=16f877            
 	#include <p16f877.inc>        
 	
@@ -21,19 +22,19 @@
 
 
 ;******* VARIABLE DEFINITIONS
-variable1 		equ 	0x20
-variable2 		equ 	0x21
-variable3 		equ 	0x22
+	cblock 0x20
+variable1 		:1
+variable2 		:1
+variable3 		:1
 
-adr_EEPROM		equ		0x23
-data_EEPROM		equ		0x24
+adr_EEPROM		:1
 
-w_temp        	equ     0x25        
-status_temp   	equ     0x26	 
+w_temp        	:1
+status_temp   	:1
+ptr				:1
+	endc
 ;**********************************************************************
 ;**********************************************************************
-		ORG		0x100
-texte	da	"Mohamed-Fares"	
 		ORG     0x000             ; processor reset vector
   		goto    main              ; go to beginning of program
 		
@@ -48,18 +49,16 @@ texte	da	"Mohamed-Fares"
 		movwf	STATUS            ; restore pre-isr STATUS register contents
 		swapf   w_temp,f
 		swapf   w_temp,w          ; restore pre-isr W register contents
-		bcf 	INTCON,INTF
 		retfie                    ; return from interrupt
 ;**********************************************************************
 ;**********************************************************************
 
 
 main
-		;Mise a zero de mes deux variables (adr_EEPROM, data_EEPROM)
+		;Mise a zero de mes deux variables (adr_EEPROM)
 		banksel		adr_EEPROM
 		clrf		adr_EEPROM
-		movlw		0x30
-		movwf		data_EEPROM
+		clrf		ptr
 		;Config	(PORTC input)
 		banksel		TRISC
 		movlw		0xff
@@ -82,29 +81,37 @@ main
 		
 		banksel		SSPCON
 		movlw		0x28		; Datasheet page 69 (REGISTER 9-2: SSPCON: SYNC SERIAL PORT CONTROL REGISTER (ADDRESS 14h))
+								; 0010 1000
 		movwf		SSPCON		;
 		
+		
+		
 		banksel		PORTC
+begin
 		btfss		PORTC,RC0
-		goto		$-1
+		goto		begin
 infloop
-		call		I2C_start	;Lancer une condition Start
-		movlw		b'10100000'	;Mettre l'adresse de l'esclave dans W suivi du bit R/W
-		call		I2C_write	;Ecrire le contenu de W dans le bus I2C
+		call		I2C_start		;Lancer une condition Start
+		movlw		b'10100000'		;Mettre l'adresse de l'esclave dans W suivi du bit R/W
+		call		I2C_write		;Ecrire le contenu de W dans le bus I2C
 		call		I2C_ACK_slave_to_master	;Attendre l'ACK de l'esclave
 		banksel		adr_EEPROM
 		movf		adr_EEPROM,W	;Adresse interne de l'EEPROM	
 		call		I2C_write		;Envoyer cette adresse pour informer l'EEPROM qu'on veut ecire sur cette adresse
 		call		I2C_ACK_slave_to_master	;Attende l'ACK de l'esclave  
-		banksel		data_EEPROM
-		movf		data_EEPROM,W	;Donnee qu'on veut ecrire dans l'EEPROM
+		call		TABLE			;Aller cherchez une donnee de notre TABLE
 		call		I2C_write		;Envoyer cette donnee a l'EEPROM
 		call		I2C_ACK_slave_to_master	;Attendre l'ACK de l'esclave
-		call		I2C_stop	;Lancer uen condition Stop pour terminer la communication	
+		call		I2C_stop	 	;Lancer uen condition Stop pour terminer la communication	
 		banksel		adr_EEPROM
-		incfsz		adr_EEPROM,F ;incrementer l'adresse de l'EEPROM
-		incfsz		data_EEPROM		
+		incf		adr_EEPROM,F 	;incrementer l'adresse de l'EEPROM
+		incf		ptr		
 		call 		delay
+		banksel		adr_EEPROM
+		movlw		.13
+		subwf		ptr,W
+		btfsc		STATUS,Z
+		goto		begin
 		goto infloop
 
 ;************************************************************************
@@ -212,4 +219,18 @@ b1
 		movwf 		variable3
 		return
 ;************************************************************************	
+TABLE
+		banksel		ptr
+		movf		ptr,W
+		addwf		PCL
+char	dt		"Mohamed-Fares" ;c'est l'equivalent de: RELTW "M"
+								;					   	RETLW "o"	
+								;						RETLW "h"
+								;						RETLW "a"
+								;						RETLW "m"
+								;							.
+								;							.
+								;							.
+								;						   etc
+;************************************************************************
 		end                       
